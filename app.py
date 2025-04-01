@@ -22,35 +22,26 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    data = request.get_json()
+    data = request.get_json()  # Get the message from the user in JSON format
     user_message = data.get("message", "")
 
-    if not user_message:
+    if not user_message:  # If no message is provided
         return jsonify({"error": "No message provided"}), 400
 
     try:
         # Use OpenAI's GPT-4 model to respond based on the user's message
         response = openai.ChatCompletion.create(
-            model="gpt-4",
+            model="gpt-4",  # Specify the model you want to use
             messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are a helpful assistant for El Rayo, "
-                        "a vibrant Mexican restaurant in Portland, Maine. "
-                        "You can assist with questions about hours, menu items, reservations, "
-                        "takeout, dietary restrictions, location, parking, and other information. "
-                        "If you don't know the answer, politely redirect the user to call or visit the restaurant."
-                    )
-                },
+                {"role": "system", "content": "You are a helpful assistant for El Rayo, a vibrant Mexican restaurant in Portland, Maine."},
                 {"role": "user", "content": user_message}
             ]
         )
 
-        # Extract the assistant's response
+        # Extract the response from OpenAI's API response
         reply = response['choices'][0]['message']['content'].strip()
 
-        # Return the response
+        # Return the response back to the user
         return jsonify({"response": reply})
 
     except Exception as e:
