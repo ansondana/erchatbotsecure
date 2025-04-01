@@ -1,18 +1,15 @@
 print(">>> app.py started")
 from flask import Flask, request, jsonify
 from openai import OpenAI
+from vercel_wsgi import handle_request
 from dotenv import load_dotenv
 import os
 
-from dotenv import load_dotenv
 load_dotenv(dotenv_path=".env")
 
-import os
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 app = Flask(__name__)
-
-# Replace with your actual OpenAI API key
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -23,8 +20,7 @@ def chat():
         return jsonify({"error": "No message provided"}), 400
 
     try:
-        # Set up system prompt to behave like El Rayo's assistant
-        response = client.chat.completions.create(model="gpt-4",  # You can also use gpt-3.5-turbo
+        response = client.chat.completions.create(model="gpt-4",
         messages=[
             {
                 "role": "system",
@@ -48,5 +44,5 @@ def chat():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5000, debug=True)
+def handler(environ, start_response):
+    return handle_request(app, environ, start_response)
