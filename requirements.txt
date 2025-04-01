@@ -2,4 +2,3 @@ Flask
 openai
 gunicorn
 python-dotenv
-vercel-wsgi
