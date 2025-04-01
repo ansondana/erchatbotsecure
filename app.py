@@ -29,28 +29,34 @@ def chat():
         return jsonify({"error": "No message provided"}), 400
 
     try:
+        # Use OpenAI's GPT-4 model to respond based on the user's message
         response = openai.ChatCompletion.create(
             model="gpt-4",
             messages=[
                 {
                     "role": "system",
                     "content": (
-                        "You are a friendly, knowledgeable assistant for El Rayo, "
-                        "a vibrant Mexican restaurant located in Portland, Maine. "
-                        "You help customers with questions about hours, menu items, reservations, "
-                        "takeout, dietary restrictions, location, parking, and general info. "
-                        "If someone asks about things you don’t know, kindly redirect them to call or visit."
+                        "You are a helpful assistant for El Rayo, "
+                        "a vibrant Mexican restaurant in Portland, Maine. "
+                        "You can assist with questions about hours, menu items, reservations, "
+                        "takeout, dietary restrictions, location, parking, and other information. "
+                        "If you don't know the answer, politely redirect the user to call or visit the restaurant."
                     )
                 },
                 {"role": "user", "content": user_message}
             ]
         )
+
+        # Extract the assistant's response
         reply = response['choices'][0]['message']['content'].strip()
+
+        # Return the response
         return jsonify({"response": reply})
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        logging.error(f"Error processing request: {str(e)}")
+        return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 # Run the app using Flask's default WSGI server for Render
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host='0.0.0.0', port=5000)
