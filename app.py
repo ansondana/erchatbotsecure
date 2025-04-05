@@ -18,11 +18,23 @@ app = Flask(__name__)
 
 @app.route("/", methods=["GET"])
 def home():
-    return jsonify({"message": "El Rayo Chatbot is running!"})
+    return """
+    <html>
+        <head><title>El Rayo Chatbot</title></head>
+        <body>
+            <h1>Welcome to El Rayo Chatbot</h1>
+            <form action="/chat" method="post">
+                <label for="message">Your Message:</label><br>
+                <input type="text" id="message" name="message"><br><br>
+                <input type="submit" value="Send">
+            </form>
+        </body>
+    </html>
+    """
 
-@app.route("/chat", methods=["POST"])
+@app.route("/chat", methods=["GET", "POST"])
 def chat():
-    data = request.get_json()  # Get the message from the user in JSON format
+    data = request.get_json() if request.is_json else request.form
     user_message = data.get("message", "")
 
     if not user_message:  # If no message is provided
@@ -42,6 +54,8 @@ def chat():
         reply = response['choices'][0]['message']['content'].strip()
 
         # Return the response back to the user
+        if not request.is_json:
+            return f"<p><strong>Response:</strong> {reply}</p>"
         return jsonify({"response": reply})
 
     except Exception as e:
