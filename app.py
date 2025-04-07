@@ -12,7 +12,6 @@ logging.debug("app.py started")
 api_key = os.getenv("OPENAI_API_KEY")
 if not api_key:
     logging.error("OPENAI_API_KEY environment variable is missing!")
-openai.api_key = api_key
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -21,14 +20,59 @@ app = Flask(__name__)
 def home():
     return """
     <html>
-        <head><title>El Rayo Chatbot</title></head>
+        <head>
+            <title>El Rayo Chatbot</title>
+            <style>
+                body {
+                    background-color: #45C4B0;
+                    font-family: 'Trebuchet MS', sans-serif;
+                    text-align: center;
+                    color: #333;
+                    padding-top: 50px;
+                }
+                .container {
+                    background-color: white;
+                    max-width: 500px;
+                    margin: auto;
+                    padding: 30px;
+                    border-radius: 12px;
+                    box-shadow: 0 0 20px rgba(0,0,0,0.2);
+                }
+                img {
+                    width: 200px;
+                    margin-bottom: 20px;
+                }
+                input[type="text"] {
+                    width: 90%;
+                    padding: 10px;
+                    margin-bottom: 20px;
+                    border: 1px solid #ccc;
+                    border-radius: 6px;
+                    font-size: 16px;
+                }
+                input[type="submit"] {
+                    background-color: #E85A4F;
+                    color: white;
+                    padding: 10px 20px;
+                    border: none;
+                    border-radius: 6px;
+                    font-size: 16px;
+                    cursor: pointer;
+                }
+                input[type="submit"]:hover {
+                    background-color: #d24a3b;
+                }
+            </style>
+        </head>
         <body>
-            <h1>Welcome to El Rayo Chatbot</h1>
-            <form action="/chat" method="post">
-                <label for="message">Your Message:</label><br>
-                <input type="text" id="message" name="message"><br><br>
-                <input type="submit" value="Send">
-            </form>
+            <div class="container">
+                <img src="/static/logo.png" alt="El Rayo Logo">
+                <h1>Ask El Rayo Chatbot</h1>
+                <form action="/chat" method="post">
+                    <input type="text" id="message" name="message" placeholder="Type your question here..." required><br>
+                    <input type="submit" value="Send">
+                </form>
+            </div>
         </body>
     </html>
     """
