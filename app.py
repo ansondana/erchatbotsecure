@@ -79,6 +79,31 @@ def home():
                     box-shadow: 0 0 20px rgba(0,0,0,0.2);
                     animation: fadeIn 0.6s ease-out;
                 }
+                .chat-window {
+                    max-height: 400px;
+                    overflow-y: auto;
+                    margin-top: 20px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                }
+                .bubble {
+                    animation: bubbleIn 0.3s ease-out;
+                    text-align: left;
+                    margin-bottom: 10px;
+                    padding: 12px 16px;
+                    border-radius: 12px;
+                }
+                .bubble.user {
+                    align-self: flex-end;
+                    background-color: #E85A4F;
+                    color: white;
+                }
+                .bubble.bot {
+                    align-self: flex-start;
+                    background-color: #f0f0f0;
+                    color: #000;
+                }
                 img {
                     width: 200px;
                     margin-bottom: 20px;
@@ -103,9 +128,6 @@ def home():
                 input[type="submit"]:hover {
                     background-color: #d24a3b;
                 }
-                .bubble {
-                    animation: bubbleIn 0.3s ease-out;
-                }
             </style>
         </head>
         <body>
@@ -116,24 +138,29 @@ def home():
                     <input type="text" id="message" name="message" placeholder="Type your question here..." required><br>
                     <input type="submit" value="Send">
                 </form>
+                <div class="chat-window"></div>
             </div>
             <script>
+                const chatWindow = document.createElement("div");
+                chatWindow.className = "chat-window";
+                document.querySelector(".container").appendChild(chatWindow);
+
                 document.querySelector("form").addEventListener("submit", async function(e) {
                     e.preventDefault();
                     const input = document.getElementById("message");
                     const message = input.value.trim();
                     if (!message) return;
 
-                    const container = document.querySelector(".container");
                     const userBubble = document.createElement("div");
-                    userBubble.className = "bubble";
+                    userBubble.className = "bubble user";
                     userBubble.innerHTML = `<strong>You:</strong> ${message}`;
-                    container.appendChild(userBubble);
+                    chatWindow.appendChild(userBubble);
 
                     const typingBubble = document.createElement("div");
-                    typingBubble.className = "bubble";
-                    typingBubble.innerHTML = `<strong>Bot:</strong> <span class='typing'><span></span><span></span><span></span></span>`;
-                    container.appendChild(typingBubble);
+                    typingBubble.className = "bubble bot";
+                    typingBubble.innerHTML = `<strong>El Rayo:</strong> <span class='typing'><span></span><span></span><span></span></span>`;
+                    chatWindow.appendChild(typingBubble);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
 
                     input.value = "";
 
@@ -147,9 +174,10 @@ def home():
                     typingBubble.remove();
 
                     const botBubble = document.createElement("div");
-                    botBubble.className = "bubble";
-                    botBubble.innerHTML = `<strong>Bot:</strong> ${data.response || "Sorry, something went wrong."}`;
-                    container.appendChild(botBubble);
+                    botBubble.className = "bubble bot";
+                    botBubble.innerHTML = `<strong>El Rayo:</strong> ${data.response || "Sorry, something went wrong."}`;
+                    chatWindow.appendChild(botBubble);
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
                 });
             </script>
         </body>
