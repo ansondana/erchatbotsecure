@@ -3,15 +3,15 @@ from flask import Flask, request, jsonify, session
 import openai
 import os
 from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+client = OpenAI(api_key=api_key)
 
 # Initialize logging
 logging.basicConfig(level=logging.DEBUG)
 logging.debug("app.py started")
-
-# Initialize OpenAI client using environment variable for API key
-api_key = os.getenv("OPENAI_API_KEY")
-if not api_key:
-    logging.error("OPENAI_API_KEY environment variable is missing!")
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -78,20 +78,18 @@ def home():
     </html>
     """
 
-@app.route("/chat", methods=["GET", "POST"])
+@app.route("/chat", methods=["POST"])
 def chat():
     if 'history' not in session:
         session['history'] = []
 
-    data = request.get_json() if request.is_json else request.form
+    data = request.get_json()
     user_message = data.get("message", "")
 
     if not user_message:
         return jsonify({"error": "No message provided"}), 400
 
     try:
-        client = OpenAI()
-
         response = client.chat.completions.create(
             model="gpt-4",
             messages=[
@@ -102,27 +100,12 @@ def chat():
         )
 
         reply = response.choices[0].message.content.strip()
-
-        # Append to chat history
         session['history'].append({"role": "user", "content": user_message})
         session['history'].append({"role": "assistant", "content": reply})
-
-        if not request.is_json:
-            # Convert chat history to HTML
-            history_html = "<br>".join(
-                f"<b>You:</b> {m['content']}" if m["role"] == "user" else f"<b>Bot:</b> {m['content']}"
-                for m in session['history']
-            )
-            return f"""
-                <div style='text-align: left; max-width: 500px; margin: auto;'>
-                    {history_html}
-                    <br><br><a href="/">Back</a>
-                </div>
-            """
         return jsonify({"response": reply})
 
     except Exception as e:
-        logging.error(f"Error processing request: {str(e)}")
+        logging.error(f"Chat error: {str(e)}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
 
 @app.route("/reset")
