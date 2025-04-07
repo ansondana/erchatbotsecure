@@ -24,6 +24,45 @@ def home():
         <head>
             <title>El Rayo Chatbot</title>
             <style>
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
+
+                @keyframes bubbleIn {
+                    from { opacity: 0; transform: scale(0.95); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+
+                @keyframes blink {
+                    0% { opacity: 0.2; }
+                    20% { opacity: 1; }
+                    100% { opacity: 0.2; }
+                }
+
+                .typing {
+                    display: inline-block;
+                    margin-left: 10px;
+                }
+
+                .typing span {
+                    display: inline-block;
+                    background: #F0F0F0;
+                    border-radius: 50%;
+                    width: 8px;
+                    height: 8px;
+                    margin: 0 2px;
+                    animation: blink 1.4s infinite both;
+                }
+
+                .typing span:nth-child(2) {
+                    animation-delay: 0.2s;
+                }
+
+                .typing span:nth-child(3) {
+                    animation-delay: 0.4s;
+                }
+
                 body {
                     background-color: #45C4B0;
                     font-family: 'Trebuchet MS', sans-serif;
@@ -38,6 +77,7 @@ def home():
                     padding: 30px;
                     border-radius: 12px;
                     box-shadow: 0 0 20px rgba(0,0,0,0.2);
+                    animation: fadeIn 0.6s ease-out;
                 }
                 img {
                     width: 200px;
@@ -63,6 +103,9 @@ def home():
                 input[type="submit"]:hover {
                     background-color: #d24a3b;
                 }
+                .bubble {
+                    animation: bubbleIn 0.3s ease-out;
+                }
             </style>
         </head>
         <body>
@@ -74,6 +117,41 @@ def home():
                     <input type="submit" value="Send">
                 </form>
             </div>
+            <script>
+                document.querySelector("form").addEventListener("submit", async function(e) {
+                    e.preventDefault();
+                    const input = document.getElementById("message");
+                    const message = input.value.trim();
+                    if (!message) return;
+
+                    const container = document.querySelector(".container");
+                    const userBubble = document.createElement("div");
+                    userBubble.className = "bubble";
+                    userBubble.innerHTML = `<strong>You:</strong> ${message}`;
+                    container.appendChild(userBubble);
+
+                    const typingBubble = document.createElement("div");
+                    typingBubble.className = "bubble";
+                    typingBubble.innerHTML = `<strong>Bot:</strong> <span class='typing'><span></span><span></span><span></span></span>`;
+                    container.appendChild(typingBubble);
+
+                    input.value = "";
+
+                    const res = await fetch("/chat", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ message })
+                    });
+
+                    const data = await res.json();
+                    typingBubble.remove();
+
+                    const botBubble = document.createElement("div");
+                    botBubble.className = "bubble";
+                    botBubble.innerHTML = `<strong>Bot:</strong> ${data.response || "Sorry, something went wrong."}`;
+                    container.appendChild(botBubble);
+                });
+            </script>
         </body>
     </html>
     """
@@ -83,7 +161,7 @@ def chat():
     if 'history' not in session:
         session['history'] = []
 
-    data = request.get_json()
+    data = request.get_json() if request.is_json else request.form
     user_message = data.get("message", "")
 
     if not user_message:
