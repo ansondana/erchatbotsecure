@@ -1,5 +1,5 @@
 import logging
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, session
 import openai
 import os
 from openai import OpenAI
@@ -15,6 +15,7 @@ if not api_key:
 
 # Initialize Flask app
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Required for session support
 
 @app.route("/", methods=["GET"])
 def home():
@@ -79,10 +80,13 @@ def home():
 
 @app.route("/chat", methods=["GET", "POST"])
 def chat():
+    if 'history' not in session:
+        session['history'] = []
+
     data = request.get_json() if request.is_json else request.form
     user_message = data.get("message", "")
 
-    if not user_message:  # If no message is provided
+    if not user_message:
         return jsonify({"error": "No message provided"}), 400
 
     try:
@@ -92,20 +96,39 @@ def chat():
             model="gpt-4",
             messages=[
                 {"role": "system", "content": "You are a helpful assistant for El Rayo, a vibrant Mexican restaurant in Portland, Maine."},
+                *session['history'],
                 {"role": "user", "content": user_message}
             ]
         )
 
         reply = response.choices[0].message.content.strip()
 
-        # Return the response back to the user
+        # Append to chat history
+        session['history'].append({"role": "user", "content": user_message})
+        session['history'].append({"role": "assistant", "content": reply})
+
         if not request.is_json:
-            return f"<p><strong>Response:</strong> {reply}</p>"
+            # Convert chat history to HTML
+            history_html = "<br>".join(
+                f"<b>You:</b> {m['content']}" if m["role"] == "user" else f"<b>Bot:</b> {m['content']}"
+                for m in session['history']
+            )
+            return f"""
+                <div style='text-align: left; max-width: 500px; margin: auto;'>
+                    {history_html}
+                    <br><br><a href="/">Back</a>
+                </div>
+            """
         return jsonify({"response": reply})
 
     except Exception as e:
         logging.error(f"Error processing request: {str(e)}")
         return jsonify({"error": f"An error occurred: {str(e)}"}), 500
+
+@app.route("/reset")
+def reset():
+    session.pop('history', None)
+    return '<p>Chat reset. <a href="/">Start again</a></p>'
 
 # Run the app using Flask's default WSGI server for Render
 if __name__ == "__main__":
